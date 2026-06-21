@@ -4,6 +4,8 @@ import 'package:knowledges_gate/helpers/AppTheme.dart';
 import 'package:knowledges_gate/helpers/SharedResource.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -14,61 +16,9 @@ class QuestionScreen extends StatefulWidget {
 
 class _QuestionScreenState extends State<QuestionScreen>
     with SingleTickerProviderStateMixin {
-  // ── Static question bank ───────────────────────────────────────────────────
-  // Each answer value is the index of the correct option (0-based).
-  // When your PHP is fixed, replace this list with the API response.
-  final List<Map<String, dynamic>> _questions = [
-    {
-      "question": "Flutter এ State Management কেন দরকার?",
-      "options": [
-        "UI design করার জন্য",
-        "Data এবং UI update control করার জন্য",
-        "App install করার জন্য",
-        "Image load করার জন্য",
-      ],
-      "answer": 1,
-    },
-    {
-      "question": "setState() কী করে?",
-      "options": [
-        "App বন্ধ করে",
-        "UI rebuild করে",
-        "Database delete করে",
-        "API call করে",
-      ],
-      "answer": 1,
-    },
-    {
-      "question": "StatefulWidget কখন ব্যবহার করা হয়?",
-      "options": [
-        "যখন UI change হয় না",
-        "যখন UI dynamic/changeable হয়",
-        "শুধু image দেখানোর জন্য",
-        "শুধু text দেখানোর জন্য",
-      ],
-      "answer": 1,
-    },
-    {
-      "question": "GetX কী ধরনের প্যাকেজ?",
-      "options": [
-        "শুধু UI প্যাকেজ",
-        "State management, navigation ও dependency injection প্যাকেজ",
-        "Database প্যাকেজ",
-        "Camera প্যাকেজ",
-      ],
-      "answer": 1,
-    },
-    {
-      "question": "Flutter এ Hot Reload কী করে?",
-      "options": [
-        "App পুরোপুরি restart করে",
-        "শুধু UI পরিবর্তন দ্রুত দেখায়, state রাখে",
-        "Database reset করে",
-        "Build file তৈরি করে",
-      ],
-      "answer": 1,
-    },
-  ];
+  List<Map<String, dynamic>> _questions = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   // ── State ──────────────────────────────────────────────────────────────────
   late AnimationController _slideController;
@@ -92,6 +42,46 @@ class _QuestionScreenState extends State<QuestionScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
     _slideController.forward();
+    fetchQuestions();
+  }
+
+  Future<void> fetchQuestions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.pixora.one/questions.php'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isLoading = false;
+        });
+        final decodedData = jsonDecode(response.body);
+
+        List questionList;
+
+        if (decodedData is List) {
+          questionList = decodedData;
+        } else {
+          questionList = decodedData['data'] ?? [];
+        }
+
+        setState(() {
+          _questions = questionList
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList();
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load questions';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Something went wrong. Please try again.';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -166,123 +156,147 @@ class _QuestionScreenState extends State<QuestionScreen>
     Get.offAllNamed(Routes.LOGINROUTE);
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Top bar ────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
+        child: _isLoading
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _ScoreBadge(
-                    correct: _marksObtained,
-                    total: _questions.length,
-                  ),
-                  const Spacer(),
-                  // Logout
-                  GestureDetector(
-                    onTap: _logOut,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.07),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.logout_rounded,
-                        size: 18,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Scrollable question body ───────────────────────────────────
-            Expanded(
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      QuestionProgress(
-                        current: _currentIndex + 1,
-                        total: _questions.length,
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _questionText,
-                              style: AppTextStyles.heading1,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            height: 100,
-                            width: MediaQuery.of(context).size.width / 2,
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                            ),
-                            child: Image.asset('Assets/flutter_logo.png'),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      ..._options.map(
-                        (opt) => _OptionTile(
-                          optionId: opt['id']!,
-                          optionText: opt['text']!,
-                          selectedId: _selectedId,
-                          correctId: _correctId,
-                          onTap: () => _select(opt['id']!),
+                      SizedBox(
+                        height: 40,
+                        width: 40,
+                        child: CircularProgressIndicator(
+                          color: Colors.amberAccent,
                         ),
                       ),
-
-                      const SizedBox(height: 24),
                     ],
                   ),
-                ),
-              ),
-            ),
-
-            // ── Bottom navigation ──────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
+                ],
+              )
+            : Column(
                 children: [
+                  // ── Top bar ────────────────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        _ScoreBadge(
+                          correct: _marksObtained,
+                          total: _questions.length,
+                        ),
+                        const Spacer(),
+                        // Logout
+                        GestureDetector(
+                          onTap: _logOut,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.07),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.logout_rounded,
+                              size: 18,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: QuestionProgress(
+                      current: _currentIndex + 1,
+                      total: _questions.length,
+                    ),
+                  ),
+
+                  // ── Scrollable question body ───────────────────────────────────
                   Expanded(
-                    child: PrimaryButton(
-                      label: _isLastQuestion ? 'Finish' : 'Next',
-                      onTap: _selectedId != null ? _goNext : null,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 20),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _questionText,
+                                    style: AppTextStyles.heading1,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  height: 100,
+                                  width: MediaQuery.of(context).size.width / 2,
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                  ),
+                                  child: Image.asset('Assets/flutter_logo.png'),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            ..._options.map(
+                              (opt) => _OptionTile(
+                                optionId: opt['id']!,
+                                optionText: opt['text']!,
+                                selectedId: _selectedId,
+                                correctId: _correctId,
+                                onTap: () => _select(opt['id']!),
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // ── Bottom navigation ──────────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: PrimaryButton(
+                            label: _isLastQuestion ? 'Finish' : 'Next',
+                            onTap: _selectedId != null ? _goNext : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
