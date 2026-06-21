@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "683088123358",
+    "project_id": "knowledges-gate",
+    "storage_bucket": "knowledges-gate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683088123358:android:72a196906c7f744c41f94f",
+        "android_client_info": {
+          "package_name": "com.example.knowledges_gate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxHpWiyhellgdjXjIUx6bZ6JQ-MQHmiz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
