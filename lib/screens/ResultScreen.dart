@@ -50,7 +50,6 @@ class ResultScreen extends StatelessWidget {
     final rankData = _rankData(rank);
 
     // ── Navigation helpers ─────────────────────────────────────────────────
-    void onHome() => Get.offAllNamed('/home');
     void onRetry() => Get.offAllNamed('/question');
 
     return Scaffold(
@@ -61,34 +60,6 @@ class ResultScreen extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 20),
-
-              // ── Close / home button ──────────────────────────────────────
-              Align(
-                alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: onHome,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.07),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.close_rounded,
-                      size: 18,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                ),
-              ),
-
               const Spacer(),
 
               // ── Trophy illustration ──────────────────────────────────────
@@ -139,8 +110,6 @@ class ResultScreen extends StatelessWidget {
               // ── CTA buttons ──────────────────────────────────────────────
               PrimaryButton(label: 'Try Again', onTap: onRetry),
               const SizedBox(height: 12),
-              OutlineButton(label: 'Back to Home', onTap: onHome),
-              const SizedBox(height: 28),
             ],
           ),
         ),
@@ -215,19 +184,14 @@ class _ScoreCard extends StatelessWidget {
             icon: Icons.check_circle_rounded,
             iconColor: AppColors.successGreen,
           ),
+          Spacer(),
           _Divider(),
+          Spacer(),
           _StatItem(
             value: '${result.percentage.round()}%',
             label: 'Score',
             icon: Icons.bar_chart_rounded,
             iconColor: AppColors.primary,
-          ),
-          _Divider(),
-          _StatItem(
-            value: '$minutes:$seconds',
-            label: 'Time',
-            icon: Icons.timer_rounded,
-            iconColor: const Color(0xFFF59E0B),
           ),
         ],
       ),

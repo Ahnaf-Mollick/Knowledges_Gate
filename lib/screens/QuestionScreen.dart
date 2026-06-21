@@ -161,16 +161,6 @@ class _QuestionScreenState extends State<QuestionScreen>
     }
   }
 
-  void _goPrevious() {
-    if (_currentIndex > 0) {
-      setState(() {
-        _currentIndex--;
-        _selectedId = null;
-      });
-      _slideController.forward(from: 0);
-    }
-  }
-
   Future<void> _logOut() async {
     await FirebaseAuth.instance.signOut();
     Get.offAllNamed(Routes.LOGINROUTE);
@@ -189,14 +179,11 @@ class _QuestionScreenState extends State<QuestionScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
-                  CircleBackButton(onTap: _goPrevious),
-                  const Spacer(),
-                  // Score counter badge
                   _ScoreBadge(
                     correct: _marksObtained,
                     total: _questions.length,
                   ),
-                  const SizedBox(width: 10),
+                  const Spacer(),
                   // Logout
                   GestureDetector(
                     onTap: _logOut,
@@ -285,13 +272,6 @@ class _QuestionScreenState extends State<QuestionScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
-                  Expanded(
-                    child: OutlineButton(
-                      label: 'Previous',
-                      onTap: _currentIndex > 0 ? _goPrevious : null,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
                   Expanded(
                     child: PrimaryButton(
                       label: _isLastQuestion ? 'Finish' : 'Next',
