@@ -21,11 +21,13 @@ class PrimaryButton extends StatelessWidget {
       child: Container(
         height: 54,
         decoration: BoxDecoration(
-          color: AppColors.accent,
+          color: onTap == null ? AppColors.accent_grey : AppColors.accent,
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withValues(alpha: 0.4),
+              color: onTap == null
+                  ? Colors.transparent
+                  : AppColors.accent.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -41,6 +43,8 @@ class PrimaryButton extends StatelessWidget {
                   color: AppColors.textDark,
                 ),
               )
+            : onTap == null
+            ? Text(label, style: AppTextStyles.button)
             : Text(label, style: AppTextStyles.button),
       ),
     );

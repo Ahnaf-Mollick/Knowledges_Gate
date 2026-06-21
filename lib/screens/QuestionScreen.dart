@@ -95,8 +95,6 @@ class _QuestionScreenState extends State<QuestionScreen>
 
   String get _questionText => (_currentQuestion['question'] ?? '').toString();
 
-  /// Converts the options list to [{id, text}] maps.
-  /// id is the index as a string so it matches _correctId below.
   List<Map<String, dynamic>> get _options {
     final raw = _currentQuestion['options'] as List? ?? [];
     return raw.asMap().entries.map((e) {
@@ -139,13 +137,11 @@ class _QuestionScreenState extends State<QuestionScreen>
       });
       _slideController.forward(from: 0);
     } else {
-      // Navigate to result screen
       Get.offAllNamed(
         Routes.RESULTROUTE,
         parameters: {
           'totalmarks': _questions.length.toString(),
           'obtained_marks': _marksObtained.toString(),
-          'time_taken': '0', // wire up your timer here when ready
         },
       );
     }
